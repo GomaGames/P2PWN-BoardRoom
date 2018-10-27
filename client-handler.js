@@ -17,7 +17,7 @@ const sendOp = function(op, payload){
   this.send(OP.create(op, payload), error => {
     if( error !== undefined ){
       console.error(`Error writing to client socket`, error);
-      clientDisconnect.call(this);
+      disconnect.call(this);
     }
   });
 }
@@ -31,13 +31,40 @@ const receiveOp = function(msg){
       this.sendOp(OP.ERROR, { error });
       break;
     case OP.CHAT:
-      // loop through all players (in the map)
-      //  if the player is not the sender  this.username  !== playerUsername
-      // sendOp(OP.CHAT, { message })
-      players.forEach( (player, playerUsername) => {
-        if(playerUsername !== this.username){
-          let message = msg.payload.message;
-          player.sendOp(OP.CHAT, { username : this.username, message });
+      players.forEach((player, playerUsername) => {
+        if(playerUsername === this.username) return;
+
+        let message = msg.payload.message;
+        player.sendOp(OP.CHAT, { username : this.username, message });
+      });
+      break;
+    case OP.ENTER_WORLD:
+      // give current player initial state of the game, no coords
+      let playerUsernamesAvatars = [];
+      for (let { username, avatarId } of players.values()) {
+        playerUsernamesAvatars.push({username, avatarId});
+      }
+      this.sendOp(OP.ENTER_WORLD_ACK, playerUsernamesAvatars);
+
+      // broadcast new player
+      players.forEach( (player, playerUsername, map) => {
+        if(player !== this){
+          player.sendOp(OP.NEW_PLAYER, { username : this.username, avatarId : this.avatarId });
+        }
+      });
+      break;
+    case OP.MOVE_TO:
+      let position = msg.payload;
+      players.forEach( (player, playerUsername, map) => {
+        if(player !== this){
+          player.sendOp(OP.MOVE_TO, { username: player.username, position });
+        }
+      });
+      break;
+    case OP.STOP_MOVING:
+      players.forEach( (player) => {
+        if(player !== this){
+          player.sendOp(OP.STOP_MOVING, msg.payload);
         }
       });
       break;
