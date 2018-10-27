@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 // "username" => client
 const players = new Map();
 
+app.use(express.static('./public'));
 app.get('/api/hello', (req, res) => {
   const hello = 'world';
   res.json({ hello });
