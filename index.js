@@ -1,114 +1,44 @@
-const express = require('express');
-const app = express();
-const OP = require('./public/js/OP');
-
-const { Server : WebSocketServer } = require('ws');
-// const Server = require('ws').WebSocketServer;
-const server = require('http').createServer();
-const wss = new WebSocketServer({ server });
-
+const server = require('./wss');
+const rp = require('request-promise');
+const localtunnel = require('localtunnel');
 const PORT = process.env.PORT || 3000;
+const P2PWN = process.env.P2PWN || 'https://p2pwithme.2018.nodeknockout.com';
+const appName = 'gg-board-room';
 
-// "username" => client
-const players = new Map();
+let p2pwn = {
+  hostId : null
+};
 
-app.use(express.static('./public'));
-app.get('/api/hello', (req, res) => {
-  const hello = 'world';
-  res.json({ hello });
+const tunnel = localtunnel(PORT, (err, { url }) => {
+  if (err) {
+    console.error(err);
+    return process.exit(1);
+  }
+
+  console.log(`Tunnel created at: ${url}`);
+  rp({
+    uri: `${P2PWN}/connect`,
+    method: 'POST',
+    body: {
+      appName,
+      url
+    },
+    json: true
+  })
+  .then(res => p2pwn = res)
+  .catch(({message}) => console.error(message))
 });
 
-function clientHandleOp( msg ){
-  let error;
-
-  switch( msg.OP ){
-    case OP.REGISTER:
-      error = `You are already registered as: '${this.username}'`;
-      this.sendOp(OP.ERROR, { error });
-      break;
-    case OP.CHAT:
-      // loop through all players (in the map)
-      //  if the player is not the sender  this.username  !== playerUsername
-      // sendOp(OP.CHAT, { message })
-      players.forEach( (player, playerUsername) => {
-        if(playerUsername !== this.username){
-          let message = msg.payload.message;
-          player.sendOp(OP.CHAT, { username : this.username, message });
-        }
-      });
-      break;
-    default:
-      error = `Unknown OP received. Server does not understand: '${msg.OP}'`;
-      console.warn(error);
-      this.sendOp(OP.ERROR, { error });
-      return;
-  }
-}
-
-function clientReceiveMessage( message ){
-  let msg;
-  try{
-    msg = OP.parse(message);
-  }catch(error){
-    console.error(error);
-    return this.sendOp(OP.ERROR, { error });
-  }
-
-  // trap unregistered users
-  if( this.username === null ){
-    // wait for OP:REGISTER
-    if( msg.OP === OP.REGISTER ){
-      // add the player to players
-      if( players.has(msg.payload.username) ){
-        // player name is taken
-        const error = `username: '${msg.payload.username}' is not available.`;
-        this.sendOp(OP.ERROR, { error });
-      } else {
-        // username is available, register the player
-        this.username = msg.payload.username;
-        players.set(this.username, this);
-        this.sendOp(OP.REGISTERACK);
-      }
-    } else {
-      const error = `You are not registered yet. Register with OP:REGISTER first.`;
-      this.sendOp(OP.ERROR, { error });
-    }
-    return; // trap
-  }
-
-  this.clientHandleOp(msg);
-}
-
-function clientDisconnect(){
-  if( this.username !== null ){
-    if( players.has(this.username) ){
-      players.delete(this.username);
-    }
-  }
-  console.info(`Client username:'${this.username}' has disconnected.`);
-}
-
-// handles errors
-function sendOp(op, payload){
-  this.send(OP.create(op, payload), error => {
-    if( error !== undefined ){
-      console.error(`Error writing to client socket`, error);
-      clientDisconnect.call(this);
-    }
-  });
-}
-
-wss.on('connection', client => {
-  client.username = null;
-  client.sendOp = sendOp;
-  client.clientHandleOp = clientHandleOp;
-
-  client.on('message', clientReceiveMessage.bind(client));
-  client.on('close', clientDisconnect.bind(client));
-
+tunnel.on('close', function() {
+  console.log('Tunnel closed!');
+  rp({
+    uri: `${P2PWN}/host/${p2pwn.hostId}/disconnect`,
+    method: 'POST',
+    body: {},
+    json: true
+  })
+  .then(console.log)
+  .catch(({message}) => console.error(message))
 });
 
-server.on('request', app);
-server.listen(PORT, _ =>
-  console.log('Server Listening on ' + server.address().port)
-);
+server.listen(PORT, () => console.log(`WSS Listening on port ${PORT}`));
