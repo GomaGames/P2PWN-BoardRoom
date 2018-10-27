@@ -4,6 +4,7 @@
     Game = window.Game = { States: {} };
   }
 
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
   const host = window.document.location.host;
 
   /*
@@ -17,7 +18,7 @@
   Game.WS = {
     Client : null,
     Connect : _ => {
-      Game.WS.Client = new WebSocket('ws://' + host);
+      Game.WS.Client = new WebSocket(protocol + host);
     },
     Event : {
       open : 'open',
