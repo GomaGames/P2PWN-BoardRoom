@@ -19,6 +19,8 @@
   /*
    * OP codes
    */
+  const PING = 'PING';
+  const PONG = 'PONG';
   const ERROR = 'ERROR';
   const REGISTER = 'REGISTER';
   const REGISTERACK = 'REGISTERACK';
@@ -35,6 +37,8 @@
   const OP = {
     create,
     parse,
+    PING,
+    PONG,
     ERROR,
     REGISTER,
     REGISTERACK,
