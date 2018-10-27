@@ -9,7 +9,7 @@
 
   const registeredPlayer = {
     username : null,
-    avatarId : null,
+    avatarId : null
   };
 
   Game.RegisterPlayer = (username, avatarId) => {
@@ -33,6 +33,8 @@
       this.chatText.setTextBounds(-80, 40, 330, 36);
       this.sprite.addChild(this.usernameText);
       this.sprite.addChild(this.chatText);
+
+      this.moveTo({ x, y }); // tell server where we are
 
       this.sprite.update = this.update.bind(this);
     }

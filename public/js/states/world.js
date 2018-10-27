@@ -53,7 +53,7 @@
 
       this.players = new Map(); // other players
       this.player = new Game.Player(this.game,
-        RED_SIDE_SIZE + (Math.random()*CFG.GAME_WIDTH-RED_SIDE_SIZE-BLUE_SIDE_SIZE),
+        RED_SIDE_SIZE + ((Math.random()*CFG.GAME_WIDTH)-BLUE_SIDE_SIZE),
         Math.random()*CFG.GAME_HEIGHT,
         true);
 
@@ -88,11 +88,12 @@
         .filter( player => player.username !== this.player.username )
         .forEach( player => {
           // stick them somewhere in the middle
+          console.log('EXISTING PLAYERS', player.position.x, player.position.y);
           this.players.set(player.username,
             new Game.Player(
               this.game,
-              RED_SIDE_SIZE + (Math.random()*CFG.GAME_WIDTH-RED_SIDE_SIZE-BLUE_SIDE_SIZE),
-              Math.random()*CFG.GAME_HEIGHT,
+              player.position.x,
+              player.position.y,
               false,
               player
             )
@@ -100,13 +101,13 @@
           Game.playersGroup.add(this.players.get(player.username).sprite);
         });
     },
-    newPlayer : function({ username, avatarId }){
+    newPlayer : function({ username, avatarId, position : {x, y} }){
       // stick them somewhere in the middle
       this.players.set(username,
         new Game.Player(
           this.game,
-          RED_SIDE_SIZE + (Math.random()*CFG.GAME_WIDTH-RED_SIDE_SIZE-BLUE_SIDE_SIZE),
-          Math.random()*CFG.GAME_HEIGHT,
+          x,
+          y,
           false,
           { username, avatarId }
         )
@@ -118,7 +119,8 @@
       this.players.delete(username);
     },
     playerMove : function({ username, position  }) {
-      this.players.get(username).moveTo(position);
+      if(this.players.has(username))
+        this.players.get(username).moveTo(position);
     },
     playerChat : function({ username, message }) {
       if(username === this.player.username){
