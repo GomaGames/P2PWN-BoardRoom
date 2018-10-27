@@ -19,7 +19,7 @@
     Client : null,
     Connect : _ => {
       Game.WS.Client = new WebSocket(protocol + host);
-      setInterval(Game.WS.Send.Ping, 2000);
+      setInterval(Game.WS.Send.Ping, 30000);
     },
     Event : {
       open : 'open',
