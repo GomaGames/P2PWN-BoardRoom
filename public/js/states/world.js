@@ -88,7 +88,6 @@
         .filter( player => player.username !== this.player.username )
         .forEach( player => {
           // stick them somewhere in the middle
-          console.log('EXISTING PLAYERS', player.position.x, player.position.y);
           this.players.set(player.username,
             new Game.Player(
               this.game,
