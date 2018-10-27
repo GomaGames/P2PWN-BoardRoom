@@ -19,6 +19,7 @@
     Client : null,
     Connect : _ => {
       Game.WS.Client = new WebSocket(protocol + host);
+      setInterval(Game.WS.Send.Ping, 30000);
     },
     Event : {
       open : 'open',
@@ -27,6 +28,9 @@
       message : 'message'
     },
     Send : {
+      Ping : () => {
+        Game.WS.Client.send( OP.create( OP.PING ) );
+      },
       Register : (username, avatarId) => {
         Game.WS.Client.send( OP.create( OP.REGISTER, { username, avatarId } ) );
       },

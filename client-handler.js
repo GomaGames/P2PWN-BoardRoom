@@ -99,6 +99,8 @@ const receiveMessage = function(message){
     return this.sendOp(OP.ERROR, { error });
   }
 
+  if( msg.OP === OP.PING) return this.sendOp(OP.PONG);
+
   // trap unregistered users
   if( this.username === null ){
     // wait for OP:REGISTER
